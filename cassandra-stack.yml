@@ -1,0 +1,100 @@
+services:
+  cassandra1:
+    image: cassandra:5.0
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == Brenda  # Node1 roda neste host
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+      update_config:
+        parallelism: 1
+        delay: 20s
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+    environment:
+      CASSANDRA_CLUSTER_NAME: "clusterCanssandra"
+      CASSANDRA_SEEDS: "cassandra1"
+      CASSANDRA_NUM_TOKENS: 256
+      CASSANDRA_DC: "datacenter1"
+      CASSANDRA_RACK: "rack1"
+      CASSANDRA_BROADCAST_ADDRESS: "cassandra1"
+      CASSANDRA_BROADCAST_RPC_ADDRESS: "cassandra1"
+      CASSANDRA_LISTEN_ADDRESS: "auto"
+      CASSANDRA_ENDPOINT_SNITCH: "GossipingPropertyFileSnitch"
+      JVM_EXTRA_OPTS: "-Xms512M -Xmx512M"
+    networks:
+      - cassandra-net
+    volumes:
+      - cassandra_data1:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD", "pgrep", "java"]
+      interval: 60s
+      timeout: 120s
+      retries: 5
+      start_period: 120s
+    ulimits:
+      nofile:
+        soft: 4096
+        hard: 4096
+
+  cassandra2:
+    image: cassandra:5.0
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == rais  # Node2 roda neste host
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+      update_config:
+        parallelism: 1
+        delay: 20s
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+    environment:
+      CASSANDRA_CLUSTER_NAME: "clusterCanssandra"
+      CASSANDRA_SEEDS: "tasks.cassandra1"
+      CASSANDRA_NUM_TOKENS: 256
+      CASSANDRA_DC: "datacenter1"
+      CASSANDRA_RACK: "rack1"
+      CASSANDRA_BROADCAST_ADDRESS: "tasks.cassandra2"
+      CASSANDRA_BROADCAST_RPC_ADDRESS: "tasks.cassandra2"
+      CASSANDRA_LISTEN_ADDRESS: "auto"
+      CASSANDRA_ENDPOINT_SNITCH: "GossipingPropertyFileSnitch"
+      JVM_EXTRA_OPTS: "-Xms512M -Xmx512M"
+    networks:
+      - cassandra-net
+    volumes:
+      - cassandra_data2:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD", "pgrep", "java"]
+      interval: 60s
+      timeout: 120s
+      retries: 5
+      start_period: 120s
+    ulimits:
+      nofile:
+        soft: 4096
+        hard: 4096
+
+networks:
+  cassandra-net:
+    external: true
+
+volumes:
+  cassandra_data1: {}
+  cassandra_data2: {}
